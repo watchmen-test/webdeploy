@@ -1,0 +1,20 @@
+[source-servers]
+demo-test
+
+
+[dest-servers]
+testapp1 source-server=demo-test
+testapp2 source-server=demo-test
+testapp3 source-server=demo-test
+
+-name: fetch file from source servers
+
+hosts: source-servers
+fetch:
+src: /home/code/
+dest: /opt/code/webdeploy
+-name: copy the  files to the right servers
+hosts: dest-servers
+copy:
+src: "/tmp/{{ source-server }}/home/code"
+dest: /opt/code/webdeploy
