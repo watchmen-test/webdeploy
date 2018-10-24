@@ -1,5 +1,5 @@
 # webdeploy
-The purpose of this repo is to house the Code to be used for technical screen of DevOps candidates
+The purpose of this repo is to house the Code to be used for technical screen of SRE candidates
 
 ## 
 
