@@ -1,0 +1,17 @@
+you must first install Terraform in order to deploy this ansible playbook 
+
+https://www.terraform.io/intro/getting-started/install.html
+
+Please add your access_key and secret_key to build.tf 
+
+Please add your Key Pair to the key_name in build.tf
+
+Just run terraform plan to see your results and then run terraform apply to build your ec2 instance
+
+TO DEPLOY YOUR WEBAPP RUN THE ANSIBLE PLAYBOOK BELOW!!!
+
+<ansible-playbook -i host deploy_mydemosite.yml>
+
+TO UPDATE YOUR INSTANCE RUN THE PLAYBOOK BELOW
+
+Please edit your ansible host file and add your hostname or IP address of your EC2 instance and run <ansible-playbook -i host update-webapp.yml>
