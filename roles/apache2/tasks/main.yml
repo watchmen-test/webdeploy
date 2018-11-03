@@ -1,0 +1,28 @@
+- name: Install apache2 web server
+  become: true
+  yum: pkg={{ item }} state=installed update_cache=true
+  with_items:
+  - httpd
+  - git
+
+- name: Restart webserver
+  become: yes
+  service: name=httpd state=restarted
+
+- name: Create download directory
+  become: yes
+  ignore_errors: yes
+  command: mkdir /tmp/download
+
+- name: Clone a private repository into testapp 
+  git:
+    repo: https://github.com/watchmen-test/webdeploy.git 
+    version: master
+    dest: /tmp/download
+    accept_hostkey: yes
+# become if needed
+  become: yes
+
+- name: moving webapp to /html 
+  become: yes
+  command: cp -r /tmp/download/test-app/. /var/www/html/
