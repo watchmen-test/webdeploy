@@ -1,0 +1,26 @@
+image: napp/docker-aws-cli
+image: docker:latest
+
+variables:
+  DOCKER_DRIVER: overlay
+
+services:
+- docker:dind
+
+before_script:
+- docker info
+- apk update
+- apk upgrade
+- apk add python python-dev py-pip build-base
+- pip install docker-compose
+- pip install awscli
+build:
+  stage: build
+  script:
+    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
+    - docker build --no-cache -t $CI_REGISTRY_IMAGE:prod-"$CI_BUILD_ID" .
+    - docker push $CI_REGISTRY_IMAGE:prod-"$CI_BUILD_ID"
+    - docker tag $CI_REGISTRY_IMAGE:prod-"$CI_BUILD_ID" $PROD_REPO_URL:prod-$CI_BUILD_ID
+    - $(aws ecr get-login --no-include-email --region us-east-2)
+    - docker push $PROD_REPO_URL:prod-$CI_BUILD_ID
+    - docker logout
