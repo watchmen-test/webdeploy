@@ -1,0 +1,304 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "AWS CloudFormation sample template LAMP_Single_Instance: Create a LAMP stack using a single EC2
+instance and a local MySQL database for storage. This template demonstrates using the AWS CloudFormation bootstrap
+scripts to install the packages and files necessary to deploy the Apache web server, PHP, and MySQL at instance launch time.
+**WARNING** This template creates an Amazon EC2 instance. You will be billed for the AWS resources used if you create a stack from this template.",
+
+  "Parameters" : {
+    "KeyName": {
+      "Description" : "Name of an existing EC2 KeyPair to enable SSH access to the instance",
+      "Type": "AWS::EC2::KeyPair::KeyName",
+      "ConstraintDescription" : "Can contain only ASCII characters."
+    },  
+    "InstanceType" : {
+      "Description" : "WebServer EC2 instance type",
+      "Type" : "String",
+      "Default" : "t2.small",
+      "ConstraintDescription" : "must be a valid EC2 instance type."
+    },
+    "SSHLocation" : {
+      "Description" : "The IP address range that can be used to SSH to the EC2 instances",
+      "Type": "String",
+      "MinLength": "9",
+      "MaxLength": "18",
+      "Default": "0.0.0.0/0",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription": "Must be a valid IP CIDR range of the form x.x.x.x/x"
+    } 
+  },
+
+{      
+  "Mappings" : {
+    "AWSInstanceType2Arch" : {
+      "t2.small"    : { "Arch" : "HVM64"  },
+    },
+    "AWSRegionArch2AMI" : {
+      "us-east-1"        : {"HVM64" : "ami-0ff8a91507f77f867", "HVMG2" : "ami-0a584ac55a7631c0c"},
+    }
+  },
+
+  "Resources" : {
+
+    "WebServerInstance1": {
+      "Type": "AWS::EC2::Instance",
+      "Metadata" : {
+        "Comment1" : "Configure the bootstrap helpers to install the Apache Web Server and PHP",
+        "Comment2" : "Save website content to /var/www/html/index.php",
+
+        "AWS::CloudFormation::Init" : {
+          "configSets" : {
+            "Install" : [ "Install" ]
+          },
+
+          "Install" : {
+            "packages" : {
+              "yum" : {
+                "httpd"        : []
+              }
+            },
+       
+          "/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
+                "content": { "Fn::Join": [ "", [
+                  "[cfn-auto-reloader-hook]\n",
+                  "triggers=post.update\n",
+                  "path=Resources.LaunchConfig.Metadata.AWS::CloudFormation::Init\n",
+                  "action=/opt/aws/bin/cfn-init -v ",
+                          "         --stack ", { "Ref" : "AWS::StackName" },
+                          "         --resource LaunchConfig ",
+                          "         --configsets wordpress_install ",
+                          "         --region ", { "Ref" : "AWS::Region" }, "\n",
+                  "runas=root\n"
+                ]]},          
+                "mode"  : "000400",
+                "owner" : "root",
+                "group" : "root"
+              },
+
+            "files" : {
+              "/var/www/html/index.html" : {
+                "content" : { "Fn::Join" : [ "", [
+                  "<!doctype html>\n",
+                  "  <html lang="en">\n",
+                  "  <head>\n",
+                  "    <meta charset="utf-8">\n",
+                  "    <title>An HTML5 Test Page</title>\n",
+                  "    <meta name="description" content="An HTML5 Test page">\n",
+                  "    <meta name="author" content="Watchmen">\n",
+                  "    <link rel="stylesheet" href="css/styles.css?v=1.0">\n",
+                  "   </head>\n",
+                  "   <body>\n",
+                  "    <script src="js/scripts.js"></script>\n",
+                  "    <img src="images/watchmen-logo-slice-600x200.jpg"/>\n",
+                  "   </body>\n",
+                  "   </html>",
+                ]]},
+                "mode"  : "000600",
+                "owner" : "apache",
+                "group" : "apache"
+              }
+            },
+            "services" : {
+              "sysvinit" : {  
+                "httpd"   : { "enabled" : "true", "ensureRunning" : "true" }
+              }
+            }
+          }
+      },
+      "Properties": {
+        "ImageId" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" },
+                          { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] },
+        "InstanceType"   : { "Ref" : "InstanceType" },
+        "SecurityGroups" : [ {"Ref" : "WebServerSecurityGroup"} ],
+        "KeyName"        : { "Ref" : "KeyName" }
+      }
+    },
+    "WebServerSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Enable HTTP access via port 80",
+        "SecurityGroupIngress" : [
+          {"IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", "CidrIp" : "0.0.0.0/0"},
+          {"IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "SSHLocation"}}
+        ]
+      }
+    }
+  },
+    "WebServerInstance2": {
+      "Type": "AWS::EC2::Instance",
+      "Metadata" : {
+        "Comment1" : "Configure the bootstrap helpers to install the Apache Web Server and PHP",
+        "Comment2" : "Save website content to /var/www/html/index.php",
+
+        "AWS::CloudFormation::Init" : {
+          "configSets" : {
+            "Install" : [ "Install" ]
+          },
+
+          "Install" : {
+            "packages" : {
+              "yum" : {
+                "httpd"        : []
+              }
+            },
+
+          "/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
+                "content": { "Fn::Join": [ "", [
+                  "[cfn-auto-reloader-hook]\n",
+                  "triggers=post.update\n",
+                  "path=Resources.LaunchConfig.Metadata.AWS::CloudFormation::Init\n",
+                  "action=/opt/aws/bin/cfn-init -v ",
+                          "         --stack ", { "Ref" : "AWS::StackName" },
+                          "         --resource LaunchConfig ",
+                          "         --configsets wordpress_install ",
+                          "         --region ", { "Ref" : "AWS::Region" }, "\n",
+                  "runas=root\n"
+                ]]},          
+                "mode"  : "000400",
+                "owner" : "root",
+                "group" : "root"
+              },
+
+            "files" : {
+              "/var/www/html/index.html" : {
+                "content" : { "Fn::Join" : [ "", [
+                  "<!doctype html>\n",
+                  "  <html lang="en">\n",
+                  "  <head>\n",
+                  "    <meta charset="utf-8">\n",
+                  "    <title>An HTML5 Test Page</title>\n",
+                  "    <meta name="description" content="An HTML5 Test page">\n",
+                  "    <meta name="author" content="Watchmen">\n",
+                  "    <link rel="stylesheet" href="css/styles.css?v=1.0">\n",
+                  "   </head>\n",
+                  "   <body>\n",
+                  "    <script src="js/scripts.js"></script>\n",
+                  "    <img src="images/watchmen-logo-slice-600x200.jpg"/>\n",
+                  "   </body>\n",
+                  "   </html>",
+                ]]},
+                "mode"  : "000600",
+                "owner" : "apache",
+                "group" : "apache"
+              }
+            },
+            "services" : {
+              "sysvinit" : {  
+                "httpd"   : { "enabled" : "true", "ensureRunning" : "true" }
+              }
+            }
+          }
+      },
+      "Properties": {
+        "ImageId" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" },
+                          { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] },
+        "InstanceType"   : { "Ref" : "InstanceType" },
+        "SecurityGroups" : [ {"Ref" : "WebServerSecurityGroup"} ],
+        "KeyName"        : { "Ref" : "KeyName" }
+      }
+    },
+    "WebServerSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Enable HTTP access via port 80",
+        "SecurityGroupIngress" : [
+          {"IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", "CidrIp" : "0.0.0.0/0"},
+          {"IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "SSHLocation"}}
+        ]
+      }
+    }
+  },
+    "WebServerInstance3": {
+      "Type": "AWS::EC2::Instance",
+      "Metadata" : {
+        "Comment1" : "Configure the bootstrap helpers to install the Apache Web Server and PHP",
+        "Comment2" : "Save website content to /var/www/html/index.php",
+
+        "AWS::CloudFormation::Init" : {
+          "configSets" : {
+            "Install" : [ "Install" ]
+          },
+
+          "Install" : {
+            "packages" : {
+              "yum" : {
+                "httpd"        : []
+              }
+            },
+  
+          "/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
+                "content": { "Fn::Join": [ "", [
+                  "[cfn-auto-reloader-hook]\n",
+                  "triggers=post.update\n",
+                  "path=Resources.LaunchConfig.Metadata.AWS::CloudFormation::Init\n",
+                  "action=/opt/aws/bin/cfn-init -v ",
+                          "         --stack ", { "Ref" : "AWS::StackName" },
+                          "         --resource LaunchConfig ",
+                          "         --configsets wordpress_install ",
+                          "         --region ", { "Ref" : "AWS::Region" }, "\n",
+                  "runas=root\n"
+                ]]},          
+                "mode"  : "000400",
+                "owner" : "root",
+                "group" : "root"
+              },
+              
+            "files" : {
+              "/var/www/html/index.html" : {
+                "content" : { "Fn::Join" : [ "", [
+                  "<!doctype html>\n",
+                  "  <html lang="en">\n",
+                  "  <head>\n",
+                  "    <meta charset="utf-8">\n",
+                  "    <title>An HTML5 Test Page</title>\n",
+                  "    <meta name="description" content="An HTML5 Test page">\n",
+                  "    <meta name="author" content="Watchmen">\n",
+                  "    <link rel="stylesheet" href="css/styles.css?v=1.0">\n",
+                  "   </head>\n",
+                  "   <body>\n",
+                  "    <script src="js/scripts.js"></script>\n",
+                  "    <img src="images/watchmen-logo-slice-600x200.jpg"/>\n",
+                  "   </body>\n",
+                  "   </html>",
+                ]]},
+                "mode"  : "000600",
+                "owner" : "apache",
+                "group" : "apache"
+              }
+            },
+            "services" : {
+              "sysvinit" : {  
+                "httpd"   : { "enabled" : "true", "ensureRunning" : "true" }
+              }
+            }
+          }
+      },
+      "Properties": {
+        "ImageId" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" },
+                          { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] },
+        "InstanceType"   : { "Ref" : "InstanceType" },
+        "SecurityGroups" : [ {"Ref" : "WebServerSecurityGroup"} ],
+        "KeyName"        : { "Ref" : "KeyName" }
+      }
+    },
+    "WebServerSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Enable HTTP access via port 80",
+        "SecurityGroupIngress" : [
+          {"IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", "CidrIp" : "0.0.0.0/0"},
+          {"IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "SSHLocation"}}
+        ]
+      }
+    }
+  },
+  "Outputs" : {
+    "WebsiteURL" : {
+      "Description" : "URL for newly created LAMP stack",
+      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "WebServerInstance1", "PublicDnsName" ]}]] }
+      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "WebServerInstance2", "PublicDnsName" ]}]] }
+      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "WebServerInstance3", "PublicDnsName" ]}]] }
+    }
+  }
+}
