@@ -1,21 +1,21 @@
-# webdeploy
-The purpose of this repo is to house the Code to be used for technical screen of SRE candidates
+# Pre-requisites
+**Populate all the required values in creds.tfvars file**
+**Terraform v.0.11.8 is being used**
 
-## 
+## Deployment steps
+Terraform is being used to bring up and bootstrap the instances in AWS along with front-end ELB
+The instances can be deployed in Public/Private subnet. If you give values of Public subnet in creds.tfvars file at both the places, instances will be placed in Public subnet along with public IP.
+If instances needs to be placed in private subnet, give appropriate values in creds.tfvars file and comment out associate_public_ip_address line in main.tf file
 
-1. Demonstrate three instances of this website running
-2. Demonstrate procedures for deploying an updated change to the instances from #1
-3. Provide code as a pull request to this repo
-4. Solutions can be in the language of your choice
-5. Technology of your choice
+1. Execute **terraform init** command to initialize the providers
+2. Execute **terraform plan -var-file creds.tfvars** to get the overview of what resources will be provisioned
+3. Execute **terraform apply -var-file creds.tfvars** to actually provision the resources
+4. Test the application and execute **terraform destroy -var-file creds.tfvars** to terminate/decommission the resources
 
-
-
-### Some Suggestions
-
-We are looking to see what you are doing, We are not going to do anything to trick you but put your best foot forward. Demonstrate a working demo, feel free to exhibit your skills.
-
-
-###
-
-[How to submit a pull request](https://help.github.com/articles/creating-a-pull-request)
+## Ansible for Upgrades
+**This assumes that the commit made to git will be with -a and -m tags with Release**
+Populate an inventory file with the Public IPs of the provisioned instances
+Specify the version of application that needs to be deployed under hosts file.
+1. Add your key file under ansible directory and set proper permissions (chmod 400)
+2. Update the git URL and version in *hosts* file under *[webservers:vars]* title
+3. Execute **ansible-playbook -i hosts tasks/main.yml** to upgrade the application version
