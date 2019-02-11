@@ -13,7 +13,8 @@ If instances needs to be placed in private subnet, give appropriate values in cr
 4. Test the application and execute **terraform destroy -var-file creds.tfvars** to terminate/decommission the resources
 
 ## Ansible for Upgrades
-**This assumes that the commit made to git will be with -a and -m tags with Release**
+**code change commit made to git with -a and -m tags with Release**
+***git tag -a "1.0.0" -m "Release 1.0.0"***
 Populate an inventory file with the Public IPs of the provisioned instances
 Specify the version of application that needs to be deployed under hosts file.
 1. Add your key file under ansible directory and set proper permissions (chmod 400)
