@@ -1,0 +1,19 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: webdeploy
+spec:
+  selector:
+    matchLabels:
+      app: webdeploy
+  replicas: 3 # tells deployment to run 3 pods matching the template
+  template: # create pods using pod definition in this template
+    metadata:
+      labels:
+        app: webdeploy
+    spec:
+      containers:
+      - name: webdeploy
+        image: rirl/webdeploy:v1
+        ports:
+        - containerPort: 80
