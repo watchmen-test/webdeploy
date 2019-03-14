@@ -12,3 +12,7 @@
 Thumbs.db
 
 *.swp
+
+# IDE - IDEA ultimate.
+.idea/
+*.iml
