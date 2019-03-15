@@ -19,3 +19,5 @@ We are looking to see what you are doing, We are not going to do anything to tri
 ###
 
 [How to submit a pull request](https://help.github.com/articles/creating-a-pull-request)
+
+### [RiRL Solution Design](./rirl.md)
