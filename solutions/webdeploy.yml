@@ -1,0 +1,23 @@
+---
+ - hosts: webservers
+   become: true
+   gather_facts: no
+
+   vars:
+     repo_url: https://github.com//watchmen-testebdeploy.git 
+     destination: /var/www/html/
+
+   tasks:
+    - name: Install dep
+      yum: name={{ item }} state=latest update_cache=yes
+      with_items:
+       - git
+       - httpd
+
+    - name: Git pull and deploy
+      git: repo={{ repo_url }} dest={{ destination }}
+      notify: restart httpd
+
+   handlers:
+    - name: restart httpd
+      service: name=httpd state=restarted 
