@@ -1,0 +1,30 @@
+pipeline {
+    agent any
+	
+	environment {
+		dest_ip = "54.198.18.170"
+		login_name = "root"
+		}
+    stages {
+        stage('Pre-Build') {
+            steps {
+                echo 'Pre-build step'
+				sh "cd /opt/working/"
+				sh "rm -rf webdeploy"
+            }
+        }
+        stage('Git Clone') {
+            steps {
+                echo 'Clone git repository'
+				
+				git clone https://github.com/watchmen-test/webdeploy.git
+            }
+        }
+        stage('Deploy') {
+            steps {
+                echo 'Deploy to target server'
+				sh "scp -rp /opt/working/webdeploy/* $login_name@dest_ip:/var/www/html"
+            
+        }
+    }
+}
