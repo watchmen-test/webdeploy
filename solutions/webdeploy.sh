@@ -4,7 +4,6 @@
 Src="/opt/working/"
 Dest="/var/www/html"
 Login_Name="root"
-Src_IP="54.162.247.140"
 Dest_IP="54.198.18.170"
 
 #Cloning from git repo
