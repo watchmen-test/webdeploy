@@ -1,21 +1,42 @@
-# webdeploy
-The purpose of this repo is to house the Code to be used for technical screen of SRE candidates
-
-## 
-
-1. Demonstrate three instances of this website running
-2. Demonstrate procedures for deploying an updated change to the instances from #1
-3. Provide code as a pull request to this repo
-4. Solutions can be in the language of your choice
-5. Technology of your choice
+# Steps to Re-produce stateless application deployment and rolling updates. #
 
 
+## Create a Dockerfile to add the frontend assets and build the image from root directory ##
 
-### Some Suggestions
+ docker build .
 
-We are looking to see what you are doing, We are not going to do anything to trick you but put your best foot forward. Demonstrate a working demo, feel free to exhibit your skills.
+## Create a docker private or local registry to push the image updates ##
 
+## Login to docker registry to authenticate yourself ##
 
-###
+docker login (prompts for username and password)
 
-[How to submit a pull request](https://help.github.com/articles/creating-a-pull-request)
+## Tag and push the image to the registry ##
+
+docker tag $IMAGEID repo/image:tag
+docker push repo/image:tag
+
+## To run a kubernetes cluster with the container pushed to local or private registry ##
+
+kubectl run $container --image=repo/image:tag --port=80
+
+## To Expose as a service ##
+
+kubectl expose deployment $container --type=NodePort
+
+## To open the exposed endpoint in the browser ##
+
+  minikube service $container
+ (This will open the html page on the browser)
+
+## View the kubernetes dashboard via ##
+
+minikube dashboard
+
+## For any rolling updates, Update the image to latest version and push it to registry again ##
+kubectl set image deployment/$container $container =repo/image:tag
+(Leveraging rolling updates will benefit in Zero downtime)
+
+## To achieve a multi instance pod, we can scale the deployment to the number desired. ##
+
+![alt text](https://github.com/chandrakothapally/webdeploy/blob/master/scale_deployment.png)
