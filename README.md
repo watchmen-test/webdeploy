@@ -15,7 +15,7 @@ docker login (prompts for username and password)
 
 docker tag $IMAGEID repo/image:tag
 docker push repo/image:tag
-
+sadxacacaddc
 ## To run a kubernetes cluster with the container pushed to local or private registry ##
 
 kubectl run $container --image=repo/image:tag --port=80
